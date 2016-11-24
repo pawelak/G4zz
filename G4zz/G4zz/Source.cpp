@@ -435,11 +435,13 @@ void ChangeSize(GLsizei horizontal, GLsizei vertical)
 {
 	pix2anglex = 360.0 / (float)horizontal; // przeliczenie pikseli na stopnie
 	pix2angley = 360.0 / (float)vertical; // przeliczenie pikseli na stopnie
+
 	GLfloat AspectRatio;
 	// Deklaracja zmiennej AspectRatio  okreœlaj¹cej proporcjê
 	// wymiarów okna 
 	if (vertical == 0)  // Zabezpieczenie przed dzieleniem przez 0
 		vertical = 1;
+
 	glViewport(0, 0, horizontal, vertical);
 	// Ustawienie wielkoœciokna okna widoku (viewport)
 	// W tym przypadku od (0,0) do (horizontal, vertical)  
