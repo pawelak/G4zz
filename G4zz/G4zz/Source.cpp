@@ -36,13 +36,15 @@ static float delta_x = 0, delta_y = 0, delta_z = 0;       // ró?nica pomi?dzy po
 float alfa = 0, beta = 0;
 float alfaR = 0, betaR = 0;
 double r = 0;
+int test;
+
 
 //--------------------------------------------
 
 const int liczbaPodzialow = 41;
 typedef float point3[3];
 point3 tab[liczbaPodzialow + 1][liczbaPodzialow + 1];	//tablica w której znajduj¹ siê punkty na p³aszczyŸnie
-
+point3 tabNormalVector[liczbaPodzialow + 1][liczbaPodzialow + 1];
 
 int u = 0, v = 1;
 char model = 1;
@@ -116,6 +118,7 @@ void fillMatrix()		//wype³nienie maciezy punktami w 2D jako przygotowanie do tra
 
 void transformMatrix()	//przeliczenie punktów wed³ug podanych wzorów 
 {
+	float xu, xv, yu, yv, zu, zv;
 	int i = 0, j = 0;
 	float uL;
 	for (i = 0; i < liczbaPodzialow; i++)
@@ -128,6 +131,21 @@ void transformMatrix()	//przeliczenie punktów wed³ug podanych wzorów
 			tab[i][j][0] = (-90 * pow(uL, 5) + (225 * pow(uL, 4)) - (270 * pow(uL, 3)) + (180 * pow(uL, 2)) - (45 * uL))*cos(M_PI*vL);
 			tab[i][j][1] = 160 * pow(uL, 4) - 320 * pow(uL, 3) + 160 * pow(uL, 2);
 			tab[i][j][2] = (-90 * pow(uL, 5) + (225 * pow(uL, 4)) - (270 * pow(uL, 3)) + (180 * pow(uL, 2)) - (45 * uL))*sin(M_PI*vL);
+			
+			xu = (-450 * pow(uL, 4) + 900 * pow(uL, 3) - 810 * pow(uL, 2) + 360 * uL - 45)*cos(M_PI*vL);
+			xv = M_PI*(90 * pow(uL, 5) - 225 * pow(uL, 4) + 270 * pow(uL, 3) - 180 * pow(uL, 2) + 45 * uL)*sin(M_PI*vL);
+			yu = 640 * pow(uL, 3) - 960 * pow(uL, 2) + 320 * uL;
+			yv = 0;
+			zu = (-450 * pow(uL, 4) + 900 * pow(uL, 3) - 810 * pow(uL, 2) + 360 * uL - 45)*sin(M_PI*vL);
+			zv = -M_PI*(90 * pow(uL, 5) - 225 * pow(uL, 4) + 270 * pow(uL, 3) - 180 * pow(uL, 2) + 45 * uL)*cos(M_PI*vL);
+			
+			tabNormalVector[i][j][0] = -1.0 * (yu*zv - zu*yv);
+			tabNormalVector[i][j][1] = -1.0 * zu*xv - xu*zv;
+			tabNormalVector[i][j][2] =  xu*yv - yu*xv;
+
+
+
+			
 		}
 	}
 	//pisz(); //sprawdzenie pozycji punktów w macierzy 
@@ -149,6 +167,7 @@ void paint()
 			{
 				glBegin(GL_POINTS);
 				glVertex3fv(tab[i][j]);
+				glNormal3fv(tabNormalVector[i][j]);
 				glEnd();
 			}
 		}
@@ -203,29 +222,57 @@ void paint()
 			{
 				//W jedna strone
 				glBegin(GL_TRIANGLES);
+				
 
+				glNormal3fv(tabNormalVector[i][j + 1]);
 				glVertex3fv(tab[i][j + 1]);
+
+				glNormal3fv(tabNormalVector[i + 1][j]);
 				glVertex3fv(tab[i + 1][j]);
+
+				glNormal3fv(tabNormalVector[i + 1][j + 1]);
 				glVertex3fv(tab[i + 1][j + 1]);
+
+				
 				glEnd();
 
 				//W druga strone
 				glBegin(GL_TRIANGLES);
+				glNormal3fv(tabNormalVector[i][j]);
 				glVertex3fv(tab[i][j]);
+
+				glNormal3fv(tabNormalVector[i + 1][j]);
 				glVertex3fv(tab[i + 1][j]);
+
+				glNormal3fv(tabNormalVector[i][j + 1]);
 				glVertex3fv(tab[i][j + 1]);
+
+				
+				
+				
 				glEnd();
 			}
 			glBegin(GL_TRIANGLES);
 			if (i>i - 1 && i >= 0)
 			{
+				glNormal3fv(tabNormalVector[i][liczbaPodzialow - 1]);
 				glVertex3fv(tab[i][liczbaPodzialow - 1]);
+
+				glNormal3fv(tabNormalVector[liczbaPodzialow - i][0]);
 				glVertex3fv(tab[liczbaPodzialow - i][0]);
+
+				glNormal3fv(tabNormalVector[i + 1][liczbaPodzialow - 1]);
 				glVertex3fv(tab[i + 1][liczbaPodzialow - 1]);
 
+				glNormal3fv(tabNormalVector[i][liczbaPodzialow - 1]);
 				glVertex3fv(tab[i][liczbaPodzialow - 1]);
+
+				glNormal3fv(tabNormalVector[liczbaPodzialow - i][0]);
 				glVertex3fv(tab[liczbaPodzialow - i][0]);
+
+				glNormal3fv(tabNormalVector[liczbaPodzialow - i + 1][0]);
 				glVertex3fv(tab[liczbaPodzialow - i + 1][0]);
+
 			}
 			glEnd();
 		}
@@ -370,6 +417,7 @@ void paint()
 
 void RenderScene(void)
 {
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// Czyszczenie okna aktualnym kolorem czyszcz¹cym
 
@@ -381,6 +429,7 @@ void RenderScene(void)
 	gluLookAt(viewer[0], viewer[1], viewer[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 	Axes();
 	glTranslated(0, -5, 0);
+
 	if (status == 1)                    // je?li lewy klawisz myszy wci?ni?ty
 	{
 		r = sqrt(pow(viewer[0], 2) + pow(viewer[1], 2) + pow(viewer[2], 2));
@@ -402,6 +451,7 @@ void RenderScene(void)
 	{
 		viewer[2] += delta_z / 10;
 	}
+	
 
 	//glRotated(20.0, 1.0, 0.0, 0.0);  // Obrót o 60 stopni
 
@@ -415,15 +465,100 @@ void RenderScene(void)
 	//
 }
 
+
 /*************************************************************************************/
 // Funkcja ustalaj¹ca stan renderowania
 
+void nVector()
+{
+
+}
+
 void MyInit(void)
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	// Kolor czyszc¹cy (wype³nienia okna) ustawiono na czarny
-	fillMatrix();
-	transformMatrix();
+	
+	/*************************************************************************************/
+	//  Definicja materia³u z jakiego zrobiony jest czajnik 
+	//  i definicja Ÿród³a œwiat³a
+	/*************************************************************************************/
+
+	/*************************************************************************************/
+	// Definicja materia³u z jakiego zrobiony jest czajnik 
+
+	GLfloat mat_ambient[] = { 1.0, 1.0, 1.0, 1.0 };
+	// wspó³czynniki ka =[kar,kag,kab] dla œwiat³a otoczenia
+
+	GLfloat mat_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	// wspó³czynniki kd =[kdr,kdg,kdb] œwiat³a rozproszonego
+
+	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	// wspó³czynniki ks =[ksr,ksg,ksb] dla œwiat³a odbitego                
+
+	GLfloat mat_shininess = { 20.0 };
+	// wspó³czynnik n opisuj¹cy po³ysk powierzchni
+
+	/*************************************************************************************/
+	// Definicja Ÿród³a œwiat³a
+
+	GLfloat light_position[] = { 0.0, 0.0, 10.0, 1.0 };
+	// po³o¿enie Ÿród³a
+
+	GLfloat light_ambient[] = { 0.1, 0.1, 0.1, 1.0 };
+	// sk³adowe intensywnoœci œwiecenia Ÿród³a œwiat³a otoczenia
+	// Ia = [Iar,Iag,Iab]
+
+	GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	// sk³adowe intensywnoœci œwiecenia Ÿród³a œwiat³a powoduj¹cego
+	// odbicie dyfuzyjne Id = [Idr,Idg,Idb]
+
+	GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	// sk³adowe intensywnoœci œwiecenia Ÿród³a œwiat³a powoduj¹cego
+	// odbicie kierunkowe Is = [Isr,Isg,Isb]
+
+	GLfloat att_constant =  1.0 ;
+	// sk³adowa sta³a ds dla modelu zmian oœwietlenia w funkcji 
+	// odleg³oœci od Ÿród³a
+
+	GLfloat att_linear =  0.05 ;
+	// sk³adowa liniowa dl dla modelu zmian oœwietlenia w funkcji 
+	// odleg³oœci od Ÿród³a
+
+	GLfloat att_quadratic =  0.001 ;
+	// sk³adowa kwadratowa dq dla modelu zmian oœwietlenia w funkcji
+	// odleg³oœci od Ÿród³a
+
+	/*************************************************************************************/
+	// Ustawienie parametrów materia³u i Ÿród³a œwiat³a
+	/*************************************************************************************/
+	// Ustawienie patrametrów materia³u
+
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+	glMaterialf(GL_FRONT, GL_SHININESS, mat_shininess);
+
+	/*************************************************************************************/
+	// Ustawienie parametrów Ÿród³a
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, att_constant);
+	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, att_linear);
+	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, att_quadratic);
+
+	/*************************************************************************************/
+	// Ustawienie opcji systemu oœwietlania sceny 
+
+	glShadeModel(GL_SMOOTH); // w³aczenie ³agodnego cieniowania
+	glEnable(GL_LIGHTING);   // w³aczenie systemu oœwietlenia sceny 
+	glEnable(GL_LIGHT0);     // w³¹czenie Ÿród³a o numerze 0
+	glEnable(GL_DEPTH_TEST); // w³¹czenie mechanizmu z-bufora 
+
+	
+	
 }
 /*************************************************************************************/
 // Funkcja ma za zadanie utrzymanie sta³ych proporcji rysowanych 
@@ -534,7 +669,8 @@ void Motion(GLsizei x, GLsizei y)
 
 void main(void)
 {
-
+	fillMatrix();
+	transformMatrix();
 
 
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
